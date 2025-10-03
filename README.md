@@ -1,25 +1,57 @@
-# tmux-workflow-runner
+# Tmux ML Training Runner
 
-A robust, general-purpose **ML workflow runner** that uses [tmux](https://github.com/tmux/tmux) to manage training, experiments, or any long-running commands.  
-It automatically handles **logging, monitoring, environment activation, and reproducible output directories**.
+A simple, flexible script to run ML training (or any command) in tmux with automatic logging, monitoring windows, and environment activation.
 
 ## Features
 
-- Run your ML training command. 
-- Automatic **output directory structure** with timestamp + optional tags
-- **tmux integration**: multiple windows for training, monitoring, logs, GPU usage, and system resources
-- **Full logging** with `tee`, stored under `outputs/<timestamp>/logs/`
-- Non-interactive by default (use `--force` to replace sessions, `--attach` to auto-attach)
-- Optional monitoring commands (custom or built-in)
+- Run any command in a tmux session
+- Automatic timestamped output directories
+- Full logging with `tee` to capture all output
+- Multiple monitoring windows (GPU, logs, system)
+- Environment activation (conda, venv, or custom)
+- Non-interactive by default
+- Can run without tmux for debugging
 
+## Quick Start
 
-##  Output Structure
+### Basic Usage
+```bash
+bash run_ml_workflow.sh \
+  --cmd "python train.py" \
+  --session training
+```
 
-Each run produces a directory:
+### With Conda Environment
+```bash
+bash run_ml_workflow.sh \
+  --cmd "python train.py --epochs 100" \
+  --env-type conda --env-name myenv \
+  --session training \
+  --tag experiment1 \
+  --attach
+```
 
-outputs/run_20250101_123456_tag/
-├── checkpoints/
-├── results/
-├── logs/
-│ └── main_20250101_123456.log
+### With Config and Resume
+```bash
+bash run_ml_workflow.sh \
+  --cmd "python scripts/train.py" \
+  --env-type conda --env-name ml-env \
+  --config configs/model.yaml \
+  --resume checkpoints/last.ckpt \
+  --session training --tag v2 \
+  --force --attach
+```
+
+## Output Structure
+
+Each run creates a timestamped directory:
+
+```
+outputs/run_20251003_200748/
+├── checkpoints/        # For model checkpoints
+├── logs/              # Training logs
+│   └── training_20251003_200748.log
+├── results/           # For metrics/results
+└── session_info.sh    # Session information script
+```
 
