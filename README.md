@@ -1,24 +1,19 @@
 # Tmux ML Training Runner
 
-A simple, flexible script to run ML training (or any command) in tmux with automatic logging, monitoring windows, and environment activation.
+A simple script to run ML training (or any command) in tmux with automatic logging and monitoring windows.
 
-## Features
+## Why?
 
-- Run any command in a tmux session
-- Automatic timestamped output directories
-- Full logging with `tee` to capture all output
-- Multiple monitoring windows (GPU, logs, system)
-- Environment activation (conda, venv, or custom)
-- Non-interactive by default
-- Can run without tmux for debugging
+When you have a long-running training script like `train.py`, you want:
+- **Persistent session** - survives disconnections
+- **Automatic logging** - captures all output
+- **Easy monitoring** - GPU, logs, system resources in separate windows
 
 ## Quick Start
 
 ### Basic Usage
 ```bash
-bash run_ml_workflow.sh \
-  --cmd "python train.py" \
-  --session training
+bash run_ml_workflow.sh --cmd "python train.py"
 ```
 
 ### With Conda Environment
@@ -26,32 +21,125 @@ bash run_ml_workflow.sh \
 bash run_ml_workflow.sh \
   --cmd "python train.py --epochs 100" \
   --env-type conda --env-name myenv \
-  --session training \
-  --tag experiment1 \
+  --session my_training \
   --attach
 ```
 
-### With Config and Resume
+### Testing
 ```bash
 bash run_ml_workflow.sh \
-  --cmd "python scripts/train.py" \
-  --env-type conda --env-name ml-env \
-  --config configs/model.yaml \
-  --resume checkpoints/last.ckpt \
-  --session training --tag v2 \
+  --cmd "python demo_train.py --epochs 3" \
+  --session demo \
+  --attach
+```
+
+## What It Does
+
+1. Creates a tmux session with multiple windows:
+   - **Training**: Your command runs here
+   - **Logs**: Live tail of the log file
+   - **GPU**: `nvidia-smi` (if available)
+   - **System**: `htop` or `top`
+
+2. Logs everything to `logs/training_TIMESTAMP.log`
+
+3. Activates your conda/venv if specified
+
+## Options
+
+```
+--cmd "COMMAND"          Command to run (required)
+--session NAME           Tmux session name (default: training)
+--log-dir PATH           Log directory (default: logs)
+--attach                 Auto-attach to tmux after creation
+--force                  Kill existing session if exists
+--no-tmux                Run without tmux (for debugging)
+
+--env-type TYPE          Environment: none|conda|venv
+--env-name NAME          Conda env name or venv path
+```
+
+## Examples
+
+### Simple Training
+```bash
+bash run_ml_workflow.sh \
+  --cmd "python train.py --lr 0.001 --batch-size 32"
+```
+
+### With Environment
+```bash
+bash run_ml_workflow.sh \
+  --cmd "python train.py --config config.yaml" \
+  --env-type conda --env-name pytorch \
+  --session training_run
+```
+
+### Debug Mode (No Tmux)
+```bash
+bash run_ml_workflow.sh \
+  --cmd "python train.py" \
+  --no-tmux
+```
+
+### Force Replace Existing Session
+```bash
+bash run_ml_workflow.sh \
+  --cmd "python train.py" \
+  --session training \
   --force --attach
 ```
 
-## Output Structure
+## Tmux Commands
 
-Each run creates a timestamped directory:
+Once attached to the session:
+- **Detach**: `Ctrl-b d` (session keeps running)
+- **Switch windows**: `Ctrl-b 0` (training), `Ctrl-b 1` (logs), etc.
+- **List windows**: `Ctrl-b w`
 
+From terminal:
+- **Attach**: `tmux attach -t SESSION_NAME`
+- **Kill**: `tmux kill-session -t SESSION_NAME`
+- **List sessions**: `tmux list-sessions`
+
+## Output
+
+All output is logged to:
 ```
-outputs/run_20251003_200748/
-├── checkpoints/        # For model checkpoints
-├── logs/              # Training logs
-│   └── training_20251003_200748.log
-├── results/           # For metrics/results
-└── session_info.sh    # Session information script
+logs/training_TIMESTAMP.log
 ```
 
+Simple, timestamped, and easy to find.
+
+## Requirements
+
+- **tmux** (optional, but recommended)
+  - macOS: `brew install tmux`
+  - Ubuntu: `apt install tmux`
+- **conda** or **venv** (optional, for environment activation)
+- **nvidia-smi** (optional, for GPU monitoring)
+- **htop** (optional, falls back to `top`)
+
+## Troubleshooting
+
+**Session already exists?**
+```bash
+# Option 1: Use --force
+bash run_ml_workflow.sh --cmd "..." --force
+
+# Option 2: Attach to existing
+tmux attach -t training
+
+# Option 3: Use different name
+bash run_ml_workflow.sh --cmd "..." --session other_name
+```
+
+**Tmux not available?**
+```bash
+# Run without tmux
+bash run_ml_workflow.sh --cmd "..." --no-tmux
+```
+
+## License
+
+MIT License
