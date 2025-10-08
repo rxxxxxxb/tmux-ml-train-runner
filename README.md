@@ -120,6 +120,24 @@ Simple, timestamped, and easy to find.
 - **nvidia-smi** (optional, for GPU monitoring)
 - **htop** (optional, falls back to `top`)
 
+
+## Essential Tmux Commands
+
+### Basic Navigation
+
+**While INSIDE the tmux session:**
+
+| Action | Command |
+|--------|---------|
+| **Detach** (keep training running) | `Ctrl+B` then `D` |
+| **Switch to window 0** (Training) | `Ctrl+B` then `0` |
+| **Switch to window 1** (GPU Monitor) | `Ctrl+B` then `1` |
+| **Switch to window 2** (System) | `Ctrl+B` then `2` |
+| **Next window** | `Ctrl+B` then `N` |
+| **Previous window** | `Ctrl+B` then `P` |
+| **List windows** | `Ctrl+B` then `W` |
+
+
 ## Troubleshooting
 
 **Session already exists?**
